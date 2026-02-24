@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+   
+}
+// Le indica a Prisma que genere un cliente de Prisma para interactuar con la base de datos
+//output   = "../src/generated/prisma"  Define dónde se va a guardar el código generado del cliente. Por defecto (si no pones esta línea) 
+//Prisma guarda el cliente dentro de node_modules/@prisma/client.
+/*
+Al especificar un output personalizado, el cliente se genera en esa carpeta de tu proyecto, lo que tiene ventajas:
+
+Tienes visibilidad directa del código generado
+Es más fácil de usar en monorepos o entornos como Docker
+Puedes versionar o inspeccionar lo que Prisma generó
+
+Importante: Si usas output personalizado, debes cambiar tu import para que apunte a esa carpeta:
+import { PrismaClient } from './generated/prisma'
+*/
+
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(100)
+  email     String    @unique @db.VarChar(255)
+  password  String 
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  // Relaciones
+  movies         Movie[] @relation("MovieCreator")
+  watchlistItems WatchlistItem[]
+
+  @@map("users")
+}
+
+model Movie {
+  id          String    @id @default(uuid()) 
+  title       String    @db.VarChar(255)
+  overview    String?
+  releaseYear Int       @map("release_year")
+  genres      String[]  @default([])
+  runtime     Int?
+  posterUrl   String?
+  createdBy   String   @db.VarChar(255) @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  // Relaciones
+  creator        User  @relation("MovieCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  watchlistItems WatchlistItem[]
+  
+  @@map("movies")
+} 
+
+model WatchlistItem {
+  id        String          @id @default(uuid())
+  userId    String          @map("user_id")
+  movieId   String 
+  status    WatchlistStatus @default(PLANNED)
+  rating    Int?
+  notes     String?
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @default(now()) @map("updated_at")
+
+  // Relaciones
+  user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@map("watchlist_items")
+}
+
+enum WatchlistStatus {
+  PLANNED
+  WATCHING
+  COMPLETED
+  DROPPED
+}
