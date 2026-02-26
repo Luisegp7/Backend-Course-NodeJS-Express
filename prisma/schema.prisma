@@ -37,6 +37,7 @@ model User {
   // Relaciones
   movies         Movie[] @relation("MovieCreator")
   watchlistItems WatchlistItem[]
+  refreshTokens RefreshToken[]
 
   @@map("users")
 }
@@ -74,6 +75,18 @@ model WatchlistItem {
   movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
   @@map("watchlist_items")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_token")
 }
 
 enum WatchlistStatus {

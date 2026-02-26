@@ -1,10 +1,12 @@
 import express from 'express'
 import { DEFAULTS } from './config_defaults.js'
 import { prisma, connectDB, disconnectDB } from './config/prismaClient.js'
+import cookieParser from 'cookie-parser'
 
 import authRouter from './routes/authRoutes.js'
 import userRouter from './routes/userRoutes.js'
 import movieRouter from './routes/movieRoutes.js'
+import { errorHandler } from './middlewares/errorMiddleware.js'
 
 const PORT = DEFAULTS.PORT || 3000
 
@@ -14,12 +16,17 @@ const app = express()
 
 // Body parsing middleware
 app.use(express.json())
+app.use(cookieParser())
 app.use(express.urlencoded({ extended: true })) // Para parsear formularios tradionales de HTML
+
 
 // API Routes
 app.use('/auth', authRouter)
-app.use('/users', userRouter)
+app.use('/user', userRouter)
 app.use('/movies', movieRouter)
+
+// Middleware global para capturar errores centralizados.
+app.use(errorHandler)
 
 const server = app.listen(PORT, () => {
     console.log( `Server is running on port http://localhost:${PORT}`)
