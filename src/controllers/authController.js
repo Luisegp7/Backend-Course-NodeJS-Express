@@ -1,8 +1,9 @@
-import { prisma } from "../config/prismaClient.js"
 import bcrypt from "bcryptjs"
 import { generateAccessToken, generateRefreshToken } from "../utils/generateTokens.js"
 import jwt from "jsonwebtoken"
 import { asyncHandler } from '../utils/asyncHandler.js'
+import { UserModel } from "../models/userModel.js"
+import { RefreshTokenModel } from "../models/refreshTokenModel.js"
 
 export class AuthController {
 
@@ -12,9 +13,7 @@ export class AuthController {
         const { name, email, password } = req.body
 
         // Checks if user already exists in the database
-        const userExists = await prisma.user.findUnique({
-            where: { email }
-        })
+        const userExists = await UserModel.findByEmail( email )
 
         if (userExists) {
             return res.status(409).json({ error: 'User with this email already exists' })
@@ -33,13 +32,7 @@ export class AuthController {
         const hashedPassword = await bcrypt.hash(password, salt)
 
         // Create the user in the database
-        const user = await prisma.user.create({
-            data: {
-                name,
-                email,
-                password: hashedPassword
-            }
-        })
+        const user = await UserModel.create({ name, email, hashedPassword })
 
         // Generamos el Access Token, este token solo tiene 5 minutos de vida
         const accessToken = generateAccessToken(user.id)
@@ -48,13 +41,7 @@ export class AuthController {
         const refreshToken = generateRefreshToken(user.id, res)
 
         // Guardamos el Refresh Token en la base de datos.
-        await prisma.refreshToken.create({
-            data: {
-                token: refreshToken,
-                userId: user.id,
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-            }
-        })
+        await RefreshTokenModel.create({ userId:user.id , refreshToken })
 
         /*
         Le enviamos al cliente el token para que la puedan guardar en un lugar seguro, como una cookie o el localStorage
@@ -79,15 +66,15 @@ export class AuthController {
     static login = asyncHandler(async (req, res) => {
         const { email, password } = req.body
 
-
         // Check if user exists in the database
-        const user = await prisma.user.findUnique({
-            where: { email }
-        })
+        const user = await UserModel.findByEmail(email)
+        
 
         if (!user) {
             return res.status(404).json({ error: 'Invalid email or password' })
         }
+
+        const userId = user.id
 
         // Compare passwords
         const isPasswordValid = await bcrypt.compare(password, user.password)
@@ -97,24 +84,16 @@ export class AuthController {
         }
 
         // Generamos el Access Token, este token solo tiene 5 minutos de vida
-        const accessToken = generateAccessToken(user.id)
+        const accessToken = generateAccessToken(userId)
 
         // Generamos el Refresh Token, este token tiene 7 dias de vida
-        const refreshToken = generateRefreshToken(user.id, res)
+        const refreshToken = generateRefreshToken(userId, res)
 
         // Borramos los Refresh Token anteriores
-        await prisma.refreshToken.deleteMany({
-            where: { userId: user.id }
-        })
+        await RefreshTokenModel.deleteMany(userId)
 
         // Guardamos el Refresh Token en la base de datos.
-        await prisma.refreshToken.create({
-            data: {
-                token: refreshToken,
-                userId: user.id,
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-            }
-        })
+        await RefreshTokenModel.create({ userId, refreshToken })
 
         return res.status(200).json({
             status: 'success',
@@ -131,53 +110,47 @@ export class AuthController {
 
     // Para refresh y logout se usan los bloques try y catch
     static refresh = asyncHandler(async (req, res) => {
-        const refreshToken = req.cookies.jwt
+        const oldRefreshToken = req.cookies.jwt
 
         // Verificamos que el token exista (que el navegador nos lo haya enviado)
-        if (!refreshToken) {
+        // Si no existe lo forzamos a Login 
+        if (!oldRefreshToken) {
             return res.status(401).json({ message: 'No authorized' })
         }
 
         // Verificamos la firma, que sea valido.
-        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET)
+        const decoded = jwt.verify(oldRefreshToken, process.env.JWT_REFRESH_SECRET)
         const userId = decoded.sub
 
 
         // Buscamos en la base de datos que exista ese token 
-        const storedToken = await prisma.refreshToken.findUnique({
-            where: { token: refreshToken }
-        })
+        const storedToken = await RefreshTokenModel.findByToken(oldRefreshToken)
 
         // Verificamos si existe y su tiempo de expiracion siga vigente
+        // Si no esta vigente o no esta en la base de datos lo forzamos a Login 
         if (!storedToken || storedToken.expiresAt < new Date()) {
             return res.status(401).json({ message: 'Invalid refresh token' })
         }
 
         // Rotar el refresh token
-        await prisma.refreshToken.delete({ where: { token: refreshToken } })
+        await RefreshTokenModel.deleteByToken(oldRefreshToken)
 
-        const newRefreshToken = generateRefreshToken(storedToken.userId, res)
-        await prisma.refreshToken.create({
-            data: {
-                token: newRefreshToken,
-                userId: storedToken.userId,
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-            }
-        })
+        // Creamos un nuevo refresh token y lo guardamos en la DB
+        const refreshToken = generateRefreshToken(storedToken.userId, res)
+        await RefreshTokenModel.create({ userId, refreshToken })
 
         const newAccessToken = generateAccessToken(storedToken.userId)
         return res.status(200).json({ accessToken: newAccessToken })
 
     })
 
+    
     static logout = asyncHandler(async (req, res) => {
         const refreshToken = req.cookies.jwt
 
         // Borrar de BD si existe
         if (refreshToken) {
-            await prisma.refreshToken.delete({
-                where: { token: refreshToken }
-            })
+            await RefreshTokenModel.deleteByToken(refreshToken)
         }
 
         // Limpiar la cookie

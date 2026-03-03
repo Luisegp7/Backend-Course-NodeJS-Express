@@ -21,3 +21,5 @@ export const registerSchema = baseUserSchema.extend({
 })
 
 export const loginSchema = baseUserSchema
+export const userSchema = registerSchema.strict()
+export const partialUserSchema = registerSchema.partial().strict()

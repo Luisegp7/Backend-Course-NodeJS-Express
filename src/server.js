@@ -1,6 +1,6 @@
 import express from 'express'
 import { DEFAULTS } from './config_defaults.js'
-import { prisma, connectDB, disconnectDB } from './config/prismaClient.js'
+import { connectDB, disconnectDB } from './config/prismaClient.js'
 import cookieParser from 'cookie-parser'
 
 import authRouter from './routes/authRoutes.js'
