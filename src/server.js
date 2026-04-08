@@ -26,7 +26,7 @@ app.use(express.urlencoded({ extended: true })) // Para parsear formularios trad
 app.use(globalLimiter)
 
 // Para que express confie en el proxy (si se despliega detrás de uno) y pueda obtener la IP real del cliente
-app.set('trust proxy', true);
+app.set('trust proxy', 'loopback') // Solo confiar en el proxy si es local (ajustar según el entorno de despliegue);
 
 // API Routes
 app.use('/auth', authRouter)
