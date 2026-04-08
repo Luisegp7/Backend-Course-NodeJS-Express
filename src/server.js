@@ -10,10 +10,13 @@ import movieRouter from './routes/movieRoutes.js'
 import { errorHandler } from './middlewares/errorMiddleware.js'
 import watchListRouter from './routes/watchListRoutes.js'
 
+// Configuración del puerto
 const PORT = DEFAULTS.PORT || 3000
 
+// Conectar a la base de datos antes de iniciar el servidor
 connectDB()
 
+// Crear la aplicación Express
 const app = express()
 
 // Body parsing middleware

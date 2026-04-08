@@ -17,6 +17,8 @@ export class MovieController {
             return res.status(404).json({ message: 'No movies found' });
         }
 
+        console.log('Ip: ', req.ip, ' - User Agent: ', req.get('User-Agent'), ' - Endpoint: ', req.originalUrl, ' - Method: ', req.method)
+        console.log('Ip: ', req.headers["x-forwarded-for"] || req.socket.remoteAddress)
         return res.status(200).json({
             status: 'success',
             totalItems: totalCount,
