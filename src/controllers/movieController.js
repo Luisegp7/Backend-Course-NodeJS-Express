@@ -7,21 +7,22 @@ export class MovieController {
     static getAll = asyncHandler(async (req, res) => {
         
         // Extraemos todos los posibles filtros del query string
-        const { title, releaseYear, genres, runtime, createdBy, limit, offset } = req.query
-        console.log(genres)
-        const searchParams = movieFilterParams({ title, releaseYear, genres, runtime, createdBy, limit, offset })
+        const { title, releaseYear, genres, runtime, createdBy, pageSize= 10, offset, sort, page= 1 } = req.query
+        const searchParams = movieFilterParams({ title, releaseYear, genres, runtime, createdBy, pageSize, offset, sort, page })
 
         // Si viene título, buscamos; si no, traemos todas.
-        const movies = await MovieModel.getAll(searchParams) 
+        const { formattedMovies, totalCount } = await MovieModel.getAll(searchParams) 
 
-        if (!movies || movies.length === 0) {
+        if (!formattedMovies || formattedMovies.length === 0) {
             return res.status(404).json({ message: 'No movies found' });
         }
 
         return res.status(200).json({
             status: 'success',
-            results: movies.length,
-            data: movies
+            totalItems: totalCount,
+            totalPages:Math.ceil(totalCount/ pageSize) ,
+            currentPage: page,
+            data: formattedMovies
         })
     })
 
@@ -41,6 +42,8 @@ export class MovieController {
         })
 
     })
+
+    
 
       /* static getByTitle = asyncHandler(async (req, res) => {
 

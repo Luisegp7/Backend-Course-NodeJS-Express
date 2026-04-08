@@ -23,5 +23,5 @@ export const validateQuerySchema = (schema) => (req, res, next) => {
     Object.keys(req.query).forEach(key => delete req.query[key]); // Limpiamos el original
     Object.assign(req.query, result.data); // Copiamos los datos validados y transformados
 
-    next()
+    return next()
 }

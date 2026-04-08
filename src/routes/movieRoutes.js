@@ -6,10 +6,11 @@ import { movieQuerySchema, movieSchema } from "../schemas/movieSchema.js"
 import { validateQuerySchema } from "../middlewares/validateQuerySchema.js"
 
 
+
 const movieRouter = Router()
 
 //movieRouter.get('/per-user/:id')
-movieRouter.get('/', verifyAccessToken, validateQuerySchema(movieQuerySchema) ,MovieController.getAll)
+movieRouter.get('/', validateQuerySchema(movieQuerySchema) ,MovieController.getAll)
 movieRouter.post('/create', verifyAccessToken, validateSchema(movieSchema), MovieController.create )
 
 export default movieRouter

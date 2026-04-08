@@ -1,7 +1,7 @@
 
-export const movieFilterParams = ({ title, releaseYear, genres, runtime, createdBy, limit, offset }) => {
+export const movieFilterParams = ({ title, releaseYear, genres, runtime, createdBy, pageSize, offset, sort, page }) => {
     let where = {}
-    console.log(genres)
+    let orderBy = {}
 
     if (title) {
         where.title = {
@@ -48,6 +48,15 @@ export const movieFilterParams = ({ title, releaseYear, genres, runtime, created
         }
     }
 
-    return { where, limit, offset }
+    if (sort && (sort === 'asc' || sort === 'ASC')) {
+        orderBy = {releaseYear: 'asc'}
+    }
+
+    if (sort && (sort === 'desc' || sort === 'DESC')) {
+        orderBy = {releaseYear: 'desc'}
+    }
+
+
+    return { where, pageSize, page, orderBy }
 
 }

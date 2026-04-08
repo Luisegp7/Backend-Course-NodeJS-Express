@@ -62,15 +62,26 @@ export const movieQuerySchema = z.object({
   .positive('El numero debe ser positivo')
   .optional(),
   createdBy: z.string().optional(),
-  limit: z.coerce
+  pageSize: z.coerce
   .number({ invalid_type_error: 'Tiene que ser un número' })
   .int('Tiene que ser entero')
   .positive('Tiene que ser positivo')
   .default(10),
-  offset: z.coerce
+  /* offset: z.coerce
   .number({ invalid_type_error: 'Tiene que ser un número' })
   .int('Tiene que ser entero')
   .nonnegative('Tiene que ser positivo')
-  .default(0)
+  .default(0), */
+  sort: z
+  .enum(['asc', 'ASC', 'desc', 'DESC'],
+    {
+      errorMap: () => ({ message: 'El valor no es valido.' })
+    })
+  .optional(),
+  page: z.coerce
+  .number({ invalid_type_error: 'Tiene que ser un número' })
+  .int('Tiene que ser numero entero')
+  .positive('Tiene que ser numero igual a 1 o mayor')
+  .default(1)
 })
 

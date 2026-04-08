@@ -154,9 +154,10 @@ export class AuthController {
         }
 
         // Limpiar la cookie
-        res.cookie('jwt', '', {
-            httpOnly: true,
-            expires: new Date(0)
+        res.clearCookie('jwt', {
+        httpOnly: true,
+        sameSite: 'strict',
+        secure: true
         })
 
         return res.status(200).json({

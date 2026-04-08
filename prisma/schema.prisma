@@ -63,7 +63,7 @@ model Movie {
 model WatchlistItem {
   id        String          @id @default(uuid())
   userId    String          @map("user_id")
-  movieId   String 
+  movieId   String          @map("movie_id")
   status    WatchlistStatus @default(PLANNED)
   rating    Int?
   notes     String?
@@ -74,6 +74,8 @@ model WatchlistItem {
   user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
   movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
+
+  @@unique([userId, movieId])
   @@map("watchlist_items")
 }
 

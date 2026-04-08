@@ -1,12 +1,32 @@
-import { union } from 'zod';
 import { prisma } from '../config/prismaClient.js'
 
-export class MovieModel {
+export class 
+MovieModel {
 
     static async getAll(filters) {
-        const { where, limit, offset } = filters;
+        const { where, pageSize= 10, page= 1, orderBy } = filters;
+        console.log(pageSize, page)
 
-        const movies = await prisma.movie.findMany({
+        const [movies, totalCount] = await prisma.$transaction([
+            prisma.movie.findMany({
+                where: where,
+                select: {
+                    title: true,
+                    releaseYear: true,
+                    genres: true,
+                    runtime: true,
+                    creator: { select: { name: true } }
+                },
+                orderBy: orderBy,
+                take: pageSize ? Number(pageSize) : undefined,  // limit
+                skip: (page - 1) * pageSize
+            }),
+            prisma.movie.count({where: where})
+        ])
+
+        console.log(totalCount)
+
+        /* const movies = await prisma.movie.findMany({
             where: where,
             select: {
                 title: true,
@@ -15,16 +35,19 @@ export class MovieModel {
                 runtime: true,
                 creator: { select: { name: true } }
             },
+            orderBy: orderBy,
             take: limit ? Number(limit) : undefined,  // limit
-            skip: offset ? Number(offset) : undefined // offset
-        });
+            skip: (page - 1) * limit
+        }); */
 
-        return movies.map(movie => ({
+        const formattedMovies = movies.map(movie => ({
             ...movie,
             // Usamos ?. para evitar errores si creator es null
             createdBy: movie.creator?.name || 'Unknown', 
             creator: undefined 
-        }));
+        }))
+
+        return { formattedMovies, totalCount, pageSize }
 }
 
 
