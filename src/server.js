@@ -25,6 +25,9 @@ app.use(cookieParser())
 app.use(express.urlencoded({ extended: true })) // Para parsear formularios tradionales de HTML
 app.use(globalLimiter)
 
+// Para que express confie en el proxy (si se despliega detrás de uno) y pueda obtener la IP real del cliente
+app.set('trust proxy', true);
+
 // API Routes
 app.use('/auth', authRouter)
 app.use('/user', userRouter)
