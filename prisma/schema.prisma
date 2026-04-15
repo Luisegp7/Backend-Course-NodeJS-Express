@@ -5,8 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-   
+  provider = "prisma-client"
+  output = "../src/generated/prisma"
 }
 // Le indica a Prisma que genere un cliente de Prisma para interactuar con la base de datos
 //output   = "../src/generated/prisma"  Define dónde se va a guardar el código generado del cliente. Por defecto (si no pones esta línea) 
@@ -56,7 +56,7 @@ model Movie {
   // Relaciones
   creator        User  @relation("MovieCreator", fields: [createdBy], references: [id], onDelete: Cascade)
   watchlistItems WatchlistItem[]
-  
+
   @@map("movies")
 } 
 

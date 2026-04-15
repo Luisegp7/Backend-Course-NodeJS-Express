@@ -1,3 +1,5 @@
+import { start } from "repl";
+import { startsWith } from "zod";
 
 export const movieFilterParams = ({ title, releaseYear, genres, runtime, createdBy, pageSize, offset, sort, page }) => {
     let where = {}
@@ -5,14 +7,14 @@ export const movieFilterParams = ({ title, releaseYear, genres, runtime, created
 
     if (title) {
         where.title = {
-            contains: title, 
+            startsWith: title,
             mode: 'insensitive'
         };
     }
 
     if (releaseYear) {
         where.releaseYear = {
-            equals: releaseYear
+            equals: Number(releaseYear)
         }
     }
 
@@ -22,10 +24,11 @@ export const movieFilterParams = ({ title, releaseYear, genres, runtime, created
         const genreArray = Array.isArray(genres) ? genres : genres.split(',');
         console.log('Estoy dentro del if', genres)
 
-        const normalizeGenre = genreArray.map((g) => {
+        const normalizeGenre = genreArray.map((g) => g.trim().toLowerCase())
+        /* const normalizeGenre = genreArray.map((g) => {
             const trimmed = g.trim()
             return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase()
-        })
+        }) */
 
         where.genres = {
             hasSome : normalizeGenre
@@ -34,7 +37,7 @@ export const movieFilterParams = ({ title, releaseYear, genres, runtime, created
 
     if (runtime) {
         where.runtime = {
-            lte: runtime
+            gte: Number(runtime)
         }
     }
 
@@ -42,7 +45,7 @@ export const movieFilterParams = ({ title, releaseYear, genres, runtime, created
         // Para filtrar por el nombre del creador (relación)
         where.creator = {
             name: {
-                contains: createdBy,
+                startsWith: createdBy,
                 mode: 'insensitive'
             }
         }

@@ -2,7 +2,7 @@ import rateLimit from "express-rate-limit"
 
 export const globalLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 5
+  max: 50
 })
 
 export const loginLimiter = rateLimit({

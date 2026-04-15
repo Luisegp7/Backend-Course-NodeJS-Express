@@ -157,7 +157,8 @@ export class AuthController {
         res.clearCookie('jwt', {
         httpOnly: true,
         sameSite: 'strict',
-        secure: true
+        secure: process.env.NODE_ENV === 'production',
+        path: '/'
         })
 
         return res.status(200).json({

@@ -28,11 +28,30 @@ export class UserController {
             return res.status(404).json({ message: 'User Not Found'})
         }
 
-        const updatedData = req.body
-        const password = updatedData.password
+        const updatedData = { ...req.body }
 
-        const salt = await bcrypt.genSalt(10)
-        updatedData.password = await bcrypt.hash(password, salt)
+        if (updatedData.email || updatedData.password) {
+            const isCurrentPasswordValid = await bcrypt.compare(updatedData.currentPassword, user.password)
+
+            if (!isCurrentPasswordValid) {
+                return res.status(401).json({ message: 'Invalid current password' })
+            }
+        }
+
+        if (updatedData.email && updatedData.email !== user.email) {
+            const emailOwner = await UserModel.findByEmail(updatedData.email)
+
+            if (emailOwner && emailOwner.id !== req.userId) {
+                return res.status(409).json({ error: 'User with this email already exists' })
+            }
+        }
+
+        if (updatedData.password) {
+            const salt = await bcrypt.genSalt(10)
+            updatedData.password = await bcrypt.hash(updatedData.password, salt)
+        }
+
+        delete updatedData.currentPassword
 
         const updateUser = await UserModel.findByIdAndUpdate( req.userId, updatedData )
         

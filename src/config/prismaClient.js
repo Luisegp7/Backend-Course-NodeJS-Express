@@ -2,7 +2,14 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 
-const connectionString = `${process.env.DATABASE_URL}`;
+const isTest = process.env.NODE_ENV === 'test'
+const connectionString = isTest && process.env.DATABASE_URL_TEST
+    ? process.env.DATABASE_URL_TEST
+    : process.env.DATABASE_URL
+
+if (!connectionString) {
+    throw new Error('DATABASE_URL is not defined. Set DATABASE_URL or DATABASE_URL_TEST for test env.')
+}
 
 const adapter = new PrismaPg({ connectionString });
 

@@ -1,5 +1,6 @@
 import { WatchListModel } from "../models/watchListModel.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { MovieModel } from "../models/movieModel.js";
 
 
 export class WatchListItem {
@@ -17,11 +18,26 @@ export class WatchListItem {
     })
 
     static addTo = asyncHandler(async (req, res) => {
+        const { movieId, status, rating, notes } = req.body
 
-        // Se tiene que verificar si la movie que se añadira al watchList del usuario existe.
-        // Se tiene que verificar si la movie no ha sido añadida al watchList del usuario.
+        const movie = await MovieModel.findById(movieId)
 
-        const watchList = await WatchListModel.create(req.userId)
+        if (!movie) {
+            return res.status(404).json({ message: 'Movie not found' })
+        }
+
+        const existingItem = await WatchListModel.findByUserAndMovie(req.userId, movieId)
+
+        if (existingItem) {
+            return res.status(409).json({ message: 'Movie already in watchlist' })
+        }
+
+        const watchList = await WatchListModel.create(req.userId, {
+            movieId,
+            status,
+            rating,
+            notes
+        })
 
         if (!watchList) {
             return res.status(400).json({ message: 'Error to create'})

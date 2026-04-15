@@ -1,11 +1,12 @@
 import jwt from "jsonwebtoken"
 import 'dotenv/config'
+import { randomUUID } from 'crypto'
 
 
 export const generateAccessToken = (userId) => {
     const payload = { sub: userId }
     const secret = process.env.JWT_ACCESS_SECRET
-    const EXPIRES_ACCESS_TOKEN_IN = parseInt(process.env.JWT_ACCESS_EXPIRES_IN || '15')
+    const EXPIRES_ACCESS_TOKEN_IN = parseInt(process.env.JWT_ACCESS_EXPIRES_IN || '5')
 
     if (!secret) throw new Error('JWT_ACCESS_SECRET no esta definido en .env')
 
@@ -17,7 +18,7 @@ export const generateAccessToken = (userId) => {
 }
 
 export const generateRefreshToken = (userId, res) => {
-    const payload = { sub: userId }
+    const payload = { sub: userId, jti: randomUUID() }
     const secret = process.env.JWT_REFRESH_SECRET
     const EXPIRE_REFRESH_TOKEN_IN = parseInt(process.env.JWT_REFRESH_EXPIRES_IN || 7)
 

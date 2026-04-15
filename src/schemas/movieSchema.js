@@ -36,7 +36,7 @@ export const movieQuerySchema = z.object({
     .string({ error: 'El titulo debe contener solo caracteres'})
     .optional(),
   releaseYear: z
-  .number( {invalid_type_error: "Debe ser un número"})
+  .coerce.number( {invalid_type_error: "Debe ser un número"})
   .int()
   .min(1900, 'Tiene que ser un numero mayor a 1900.')
   .max(2030, 'Tiene que ser un numero menor a 2030.')
@@ -57,7 +57,7 @@ export const movieQuerySchema = z.object({
     ).optional()
   ),
   runtime: z
-  .number('Tiene que ser un numero')
+  .coerce.number('Tiene que ser un numero')
   .int('El numero debe ser entero')
   .positive('El numero debe ser positivo')
   .optional(),

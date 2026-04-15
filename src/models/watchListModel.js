@@ -1,4 +1,3 @@
-import { id } from "zod/locales"
 import { prisma } from "../config/prismaClient.js"
 
 export class WatchListModel {
@@ -31,16 +30,30 @@ export class WatchListModel {
         return watchList
     }
     
-    static async create (userId) {
+    static async create (userId, data) {
         const watchList = await prisma.watchlistItem.create({
             data: {
                 userId: userId,
-                movieId: 'aad03500-31a1-471c-b282-a37d14a5ef2b',
-                status: 'PLANNED',
-                rating: 7
+                movieId: data.movieId,
+                status: data.status ?? 'PLANNED',
+                rating: data.rating,
+                notes: data.notes
             }
         })
 
         return watchList
+    }
+
+    static async findByUserAndMovie(userId, movieId) {
+        const watchListItem = await prisma.watchlistItem.findUnique({
+            where: {
+                userId_movieId: {
+                    userId,
+                    movieId
+                }
+            }
+        })
+
+        return watchListItem
     }
 }

@@ -23,3 +23,25 @@ export const registerSchema = baseUserSchema.extend({
 export const loginSchema = baseUserSchema
 export const userSchema = registerSchema.strict()
 export const partialUserSchema = registerSchema.partial().strict()
+
+export const updateUserSchema = z.object({
+  name: z.string({ error: 'Tiene que ser una cadena de caracteres.' })
+    .min(3, 'El nombre tiene que tener al menos 3 caracteres.')
+    .max(100, 'El nombre puede tener maximo 100 caracteres.')
+    .trim()
+    .toLowerCase()
+    .optional(),
+  email: z.email({ error: 'Formato erroneo.' })
+    .max(255)
+    .optional(),
+  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.').optional(),
+  currentPassword: z.string().min(8, 'La contraseña actual debe tener al menos 8 caracteres.').optional()
+}).strict().superRefine((data, ctx) => {
+  if ((data.email || data.password) && !data.currentPassword) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Debe enviar la contraseña actual para cambiar email o contraseña.',
+      path: ['currentPassword']
+    })
+  }
+})

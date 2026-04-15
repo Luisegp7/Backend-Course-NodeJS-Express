@@ -3,9 +3,18 @@ import { prisma } from '../config/prismaClient.js'
 export class 
 MovieModel {
 
+    static async findById(id) {
+        const movie = await prisma.movie.findUnique({
+            where: { id },
+            select: { id: true }
+        })
+
+        return movie
+    }
+
     static async getAll(filters) {
         const { where, pageSize= 10, page= 1, orderBy } = filters;
-        console.log(pageSize, page)
+        console.log(pageSize, page, orderBy)
 
         const [movies, totalCount] = await prisma.$transaction([
             prisma.movie.findMany({
@@ -15,6 +24,7 @@ MovieModel {
                     releaseYear: true,
                     genres: true,
                     runtime: true,
+                    posterUrl: true,
                     creator: { select: { name: true } }
                 },
                 orderBy: orderBy,
@@ -23,8 +33,6 @@ MovieModel {
             }),
             prisma.movie.count({where: where})
         ])
-
-        console.log(totalCount)
 
         /* const movies = await prisma.movie.findMany({
             where: where,

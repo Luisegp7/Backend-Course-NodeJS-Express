@@ -1,13 +1,32 @@
 import express from 'express'
+import cookieParser from 'cookie-parser'
+import { globalLimiter } from './config/rateLimit.js'
+import { corsMiddleware } from './middlewares/corsMiddleware.js'
+import authRouter from './routes/authRoutes.js'
+import userRouter from './routes/userRoutes.js'
+import movieRouter from './routes/movieRoutes.js'
+import watchListRouter from './routes/watchListRoutes.js'
+import { errorHandler } from './middlewares/errorMiddleware.js'
 
-const PORT = 1234
+export const createApp = () => {
+    const app = express()
 
-const app = express()
+    // Middlewares 
+    app.use(express.json())
+    app.use(cookieParser())
+    app.use(express.urlencoded({ extended: true }))
+    app.use(globalLimiter)
+    app.use(corsMiddleware)
+    app.set('trust proxy', 'loopback')
 
-app.get('/', (req, res) => {
-    res.send('Hello World!')
-})
+    // Routes
+    app.use('/auth', authRouter)
+    app.use('/user', userRouter)
+    app.use('/movies', movieRouter)
+    app.use('/watchlist', watchListRouter)
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`)
-})
+    // Error handling middleware
+    app.use(errorHandler)
+
+    return app
+}
